@@ -1,19 +1,22 @@
 {
-  "name":"ESP32 logger",
+  "name":"ESP32 logger, extended for use with Sense Framework",
   "description":"ESP32 logging tools",
   "keywords":"esp32,logging,logger",
-  "authors":
+  "authors": [
   {
-    "name": "Denys Yarkovyi",
-    "maintainer": true
+    "name": "Denys Yarkovyi"
   },
+  {
+    "name": "Bas Schouten",
+    "maintainer": true
+  }
+  ]
   "repository":
   {
     "type": "git",
-    "url": "https://github.com/esp32m/logging.git"
+    "url": "https://github.com/I-Connect/Esp32Logging.git"
   },
-  "version": "1.0.3",
-  "license": "LGPL-3.0",
+  "version": "2.0.1",
   "frameworks": "arduino",
   "platforms": ["espressif32"]
 }
