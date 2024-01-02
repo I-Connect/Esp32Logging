@@ -3,14 +3,14 @@
   "description":"ESP32 logging tools",
   "keywords":"esp32,logging,logger",
   "authors": [
-  {
-    "name": "Denys Yarkovyi"
-  },
-  {
-    "name": "Bas Schouten",
-    "maintainer": true
-  }
-  ]
+    {
+      "name": "Denys Yarkovyi"
+    },
+    {
+      "name": "Bas Schouten",
+      "maintainer": true
+    }
+  ],
   "repository":
   {
     "type": "git",
