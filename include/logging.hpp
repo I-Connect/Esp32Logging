@@ -11,17 +11,17 @@
 
 #if LOGGING_REDEFINE_LOG_X
 
-#undef log_e
-#undef log_w
-#undef log_i
-#undef log_d
-#undef log_v
+  #undef log_e
+  #undef log_w
+  #undef log_i
+  #undef log_d
+  #undef log_v
 
-#define log_e(format, ...) Logging::system().logf(LogLevel::Error, format, ##__VA_ARGS__)
-#define log_w(format, ...) Logging::system().logf(LogLevel::Warning, format, ##__VA_ARGS__)
-#define log_i(format, ...) Logging::system().logf(LogLevel::Info, format, ##__VA_ARGS__)
-#define log_d(format, ...) Logging::system().logf(LogLevel::Debug, format, ##__VA_ARGS__)
-#define log_v(format, ...) Logging::system().logf(LogLevel::Verbose, format, ##__VA_ARGS__)
+  #define log_e(format, ...) Logging::system().logf(LogLevel::Error, format, ##__VA_ARGS__)
+  #define log_w(format, ...) Logging::system().logf(LogLevel::Warning, format, ##__VA_ARGS__)
+  #define log_i(format, ...) Logging::system().logf(LogLevel::Info, format, ##__VA_ARGS__)
+  #define log_d(format, ...) Logging::system().logf(LogLevel::Debug, format, ##__VA_ARGS__)
+  #define log_v(format, ...) Logging::system().logf(LogLevel::Verbose, format, ##__VA_ARGS__)
 
 #endif
 
@@ -228,6 +228,12 @@ typedef char* (*LogMessageFormatter)(const LogMessage*);
  */
 class LogAppender
 {
+  public:
+    virtual void setFormatter(esp32m::LogMessageFormatter formatter) = 0;
+    void setLogLevel(LogLevel level) {
+      _level = level;
+    }
+
   protected:
     /**
      * @brief Implementations must override to this method to send log message to the corresponding medium
@@ -241,6 +247,8 @@ class LogAppender
      * @return @c true on success, @c false on failure
      */
     virtual bool append(const LogMessage* message) = 0;
+
+    LogLevel _level;
 
   private:
     LogAppender* _prev = nullptr;
@@ -275,6 +283,7 @@ class FormattingAppender : public LogAppender
 
   private:
     LogMessageFormatter _formatter;
+    void setFormatter(esp32m::LogMessageFormatter) override {};
 };
 
 class Logging

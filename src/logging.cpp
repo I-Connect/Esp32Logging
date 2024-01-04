@@ -251,6 +251,10 @@ FormattingAppender::FormattingAppender(LogMessageFormatter formatter)
 
 bool FormattingAppender::append(const LogMessage* message)
 {
+  if (message && message->level() > _level) {
+    return true;
+  }
+
   auto str = _formatter(message);
   if (!str) {
     return true;
