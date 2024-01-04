@@ -68,6 +68,8 @@ class BufferedAppender : public LogAppender
       release();
     }
 
+    void setFormatter(esp32m::LogMessageFormatter formatter) override {};
+
   protected:
     bool append(const LogMessage* message)
     {
@@ -251,7 +253,7 @@ FormattingAppender::FormattingAppender(LogMessageFormatter formatter)
 
 bool FormattingAppender::append(const LogMessage* message)
 {
-  if (message && message->level() > _level) {
+  if (message && message->level() > getLogLevel()) {
     return true;
   }
 

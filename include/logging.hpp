@@ -40,6 +40,8 @@ enum LogLevel
 };
 
 class Logger;
+class Logging;
+class LogAppender;
 
 /**
  * @brief Base abstract class for classes that support context logging
@@ -222,70 +224,6 @@ class Logger
  */
 typedef char* (*LogMessageFormatter)(const LogMessage*);
 
-/**
- * @brief Base abstract class for log appenders
- * Log messages may be sent to multiple appenders (e.g. UART, filesystem, network etc.)
- */
-class LogAppender
-{
-  public:
-    virtual void setFormatter(esp32m::LogMessageFormatter formatter) = 0;
-    void setLogLevel(LogLevel level) {
-      _level = level;
-    }
-
-  protected:
-    /**
-     * @brief Implementations must override to this method to send log message to the corresponding medium
-     * @note This method may be called with @p message set to @c nullptr to test appender's ability to record messages at this time.
-     *       In this case, if the appender knows for sure that it will not be able to record messages at this time
-     *       (for example, no connection to the server, filesystem not mounted etc.), it must return @c false.
-     *       Otherwise, if the appender believes that it should be able to record the messages, it should return @c true
-     *       This behavior is exploited by buffering algorithms explained in the @c Logging::addBufferedAppender(...)
-     * @note This method SHOULD be thread-safe and take as little time as possible to record the message, unless message queue is installed, see @c Logging::useQueue(...)
-     * @param message Message to be recorded, may be @c nullptr
-     * @return @c true on success, @c false on failure
-     */
-    virtual bool append(const LogMessage* message) = 0;
-
-    LogLevel _level;
-
-  private:
-    LogAppender* _prev = nullptr;
-    LogAppender* _next = nullptr;
-    friend class Logger;
-    friend class Logging;
-    friend class BufferedAppender;
-    friend class LogQueue;
-};
-
-/**
- * @brief Base abstract class for appenders that want to receive pre-formatted messages instaed of @c LogMessage struct
- */
-class FormattingAppender : public LogAppender
-{
-  public:
-    /**
-    * @brief Construct new appender with the specified formatter
-    * @param formatter Formatter function or @c nullptr to use default formatter
-    */
-    FormattingAppender(LogMessageFormatter formatter = nullptr);
-
-    /**
-     * @brief This is overriden to format the message
-     */
-    virtual bool append(const LogMessage* message);
-
-    /**
-     * @brief This must be overriden in the descendants to recod the formatted message
-     */
-    virtual bool append(const char* message) = 0;
-
-  private:
-    LogMessageFormatter _formatter;
-    void setFormatter(esp32m::LogMessageFormatter) override {};
-};
-
 class Logging
 {
   public:
@@ -375,5 +313,77 @@ class Logging
     static LogMessageFormatter _formatter;
     static LogLevel _level;
 };
+
+/**
+ * @brief Base abstract class for log appenders
+ * Log messages may be sent to multiple appenders (e.g. UART, filesystem, network etc.)
+ */
+class LogAppender
+{
+  public:
+    virtual void setFormatter(esp32m::LogMessageFormatter formatter) = 0;
+    void setLogLevel(LogLevel level) {
+      _level = level;
+    }
+    const LogLevel getLogLevel() const {
+      if (_level == LogLevel::Default) {
+        return Logging::level();
+      } else {
+        return _level;
+      }
+    }
+
+  protected:
+    /**
+     * @brief Implementations must override to this method to send log message to the corresponding medium
+     * @note This method may be called with @p message set to @c nullptr to test appender's ability to record messages at this time.
+     *       In this case, if the appender knows for sure that it will not be able to record messages at this time
+     *       (for example, no connection to the server, filesystem not mounted etc.), it must return @c false.
+     *       Otherwise, if the appender believes that it should be able to record the messages, it should return @c true
+     *       This behavior is exploited by buffering algorithms explained in the @c Logging::addBufferedAppender(...)
+     * @note This method SHOULD be thread-safe and take as little time as possible to record the message, unless message queue is installed, see @c Logging::useQueue(...)
+     * @param message Message to be recorded, may be @c nullptr
+     * @return @c true on success, @c false on failure
+     */
+    virtual bool append(const LogMessage* message) = 0;
+
+  private:
+    LogLevel _level = LogLevel::Default;
+
+    LogAppender* _prev = nullptr;
+    LogAppender* _next = nullptr;
+    friend class Logger;
+    friend class Logging;
+    friend class BufferedAppender;
+    friend class LogQueue;
+};
+
+/**
+ * @brief Base abstract class for appenders that want to receive pre-formatted messages instaed of @c LogMessage struct
+ */
+class FormattingAppender : public LogAppender
+{
+  public:
+    /**
+    * @brief Construct new appender with the specified formatter
+    * @param formatter Formatter function or @c nullptr to use default formatter
+    */
+    FormattingAppender(LogMessageFormatter formatter = nullptr);
+
+    /**
+     * @brief This is overriden to format the message
+     */
+    virtual bool append(const LogMessage* message);
+
+    /**
+     * @brief This must be overriden in the descendants to recod the formatted message
+     */
+    virtual bool append(const char* message) = 0;
+
+  private:
+    LogMessageFormatter _formatter;
+    void setFormatter(esp32m::LogMessageFormatter) override {};
+};
+
 
 } // namespace esp32m
