@@ -38,6 +38,7 @@ enum LogLevel
   Debug,
   Verbose
 };
+LogLevel charToLevel(char c);
 
 class Logger;
 class Logging;
@@ -332,6 +333,9 @@ class LogAppender
         return _level;
       }
     }
+    virtual const char* name() {
+      return "LogAppender";
+    }
 
   protected:
     /**
@@ -369,7 +373,9 @@ class FormattingAppender : public LogAppender
     * @param formatter Formatter function or @c nullptr to use default formatter
     */
     FormattingAppender(LogMessageFormatter formatter = nullptr);
-
+    const char* name() override  {
+      return "FormattingAppender";
+    }
     /**
      * @brief This is overriden to format the message
      */

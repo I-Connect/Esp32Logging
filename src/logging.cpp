@@ -497,7 +497,7 @@ Logger& Logging::system()
 
 bool charToLevel(char c, LogLevel& l)
 {
-  switch (c)
+  switch (toupper(c))
   {
     case 'I':
       l = LogLevel::Info;
@@ -518,6 +518,12 @@ bool charToLevel(char c, LogLevel& l)
       return false;
   }
   return true;
+}
+
+LogLevel charToLevel(char c) {
+  LogLevel l = Info;
+  charToLevel(c, l);
+  return l;
 }
 
 LogLevel detectLevel(const char** mptr)
