@@ -191,6 +191,7 @@ class LogQueue
           }
           vRingbufferReturnItem(_buf, item);
         }
+        yield();
       }
     }
 };
