@@ -140,8 +140,8 @@ LogQueue* logQueue = nullptr;
 class LogQueue
 {
   public:
-    LogQueue(size_t bufsize)
-      : _bufsize(bufsize)
+    LogQueue(size_t bufsize, uint32_t autoFlushPeriod)
+      : _bufsize(bufsize), _flush_period_ms(autoFlushPeriod)
     {
       _lock = xSemaphoreCreateMutex();
       _buf = xRingbufferCreate(bufsize, RINGBUF_TYPE_NOSPLIT);
@@ -168,6 +168,7 @@ class LogQueue
     }
 
   private:
+    uint32_t _flush_period_ms;
     size_t _bufsize;
     SemaphoreHandle_t _lock;
     RingbufHandle_t _buf;
@@ -175,12 +176,13 @@ class LogQueue
     friend class Logging;
     void run()
     {
+      const TickType_t ticks_timeout = _flush_period_ms ? (TickType_t)(_flush_period_ms / portTICK_PERIOD_MS) : 100;
       esp_task_wdt_add(nullptr);
       for (;;)
       {
         esp_task_wdt_reset();
         size_t size;
-        LogMessage* item = (LogMessage*)xRingbufferReceive(_buf, &size, 100);
+        LogMessage* item = (LogMessage*)xRingbufferReceive(_buf, &size, ticks_timeout);
         if (item)
         {
           LogAppender* appender = _appenders;
@@ -190,6 +192,15 @@ class LogQueue
             appender = appender->_next;
           }
           vRingbufferReturnItem(_buf, item);
+        }
+        else if (_flush_period_ms) {
+          LogAppender* appender = _appenders;
+          while (appender)
+          {
+            //TODO : Loop only on "Buffered" Appenders ?
+            appender->append(nullptr); // nullptr ! Just to "flush" BufferedAppenders
+            appender = appender->_next;
+          }
         }
         yield();
       }
@@ -471,7 +482,7 @@ void Logging::removeAppender(LogAppender* a)
     }
 }
 
-void Logging::useQueue(int size)
+void Logging::useQueue(int size, uint32_t autoFlushPeriod)
 {
   auto q = logQueue;
   if (size)
@@ -483,7 +494,7 @@ void Logging::useQueue(int size)
       }
       delete q;
     }
-    new LogQueue(size);
+    new LogQueue(size, autoFlushPeriod);
   }
   else if (q) {
     delete q;
