@@ -266,6 +266,7 @@ namespace esp32m
                     }
                 }
                 else {}
+                yield();
             }
         }
     };
