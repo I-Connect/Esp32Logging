@@ -100,6 +100,22 @@ namespace esp32m
      */
     const char *name() const { return _name; }
     /**
+     * @return Name of the task emitted the message
+     */
+    const char* task() const { return _task; }
+    /**
+     * @return filename the message was emitted from
+     */
+    const char* filename() const { return _filename; }
+    /**
+     * @return Linenumber in filename where message was emitted from
+     */
+    const int linenumber() const { return _linenumber; }
+    /**
+     * @return Name of the function that emitted the message
+     */
+    const char* function() const {  return _function; }
+    /**
      * @return Level of this message
      */
     LogLevel level() const { return (LogLevel)_level; }
@@ -112,10 +128,16 @@ namespace esp32m
   private:
     size_t _size;
     int64_t _stamp;
-    const char *_name;
+    const char *_name;  
+    const char* _task = nullptr;
+    const char* _filename = nullptr;
+    const int _linenumber = 0;
+    const char* _function = nullptr;
     uint8_t _level;
     LogMessage(size_t size, LogLevel level, int64_t stamp, const char *name, const char *message, size_t messageLen);
     static LogMessage *alloc(LogLevel level, int64_t stamp, const char *name, const char *message);
+    LogMessage(size_t size, LogLevel level, int64_t stamp, const char* name, const char* task, const char* filename, const int linenumber, const char* function, const char* message, size_t messageLen);
+    static LogMessage* alloc(LogLevel level, int64_t stamp, const char* name, const char* task, const char* filename, const int linenumber, const char* function, const char* message);
     friend class Logger;
   };
 
@@ -144,7 +166,16 @@ namespace esp32m
      * @param level If greater than this logger's level, the message will be dropped
      * @param msg Message to be recorded
      */
-    void log(LogLevel level, const char *msg);
+    inline void log(LogLevel level, const char *msg);
+    /**
+     * @brief Send extended message to the log
+     * @param level If greater than this logger's level, the message will be dropped
+     * @param filename filename message was emitted from
+     * @param linenumber linenumber in filename where message was emitted from
+     * @param function functionname message was emitted from
+     * @param msg Message to be recorded
+     */
+    void makeMessageAndAppend(LogLevel level, const char* filename, const int linenumber, const char* function, const char* msg);
     /**
      * @brief Format and send message to the log
      * @param level If greater than this logger's level, the message will be dropped
@@ -158,6 +189,26 @@ namespace esp32m
      * @param msg Message to be recorded
      */
     void logf(LogLevel level, const char *format, ...);
+     /**
+     * @brief Format and send extended message to the log
+     * @param level If greater than this logger's level, the message will be dropped
+     * @param filename filename message was emitted from
+     * @param linenumber linenumber in filename where message was emitted from
+     * @param function functionname message was emitted from
+     * @param msg Message to be recorded
+     * @param arg Arguments
+     */
+    void extended_logf(LogLevel level, const char* filename, int linenumber, const char* function, const char* msg, va_list arg);
+     /**
+     * @brief Format and send extended message to the log
+     * @param level If greater than this logger's level, the message will be dropped
+     * @param filename filename message was emitted from
+     * @param linenumber linenumber in filename where message was emitted from
+     * @param function functionname message was emitted from
+     * @param format format of message to be recorded
+     * @param arg Arguments
+     */
+    void extended_logf(LogLevel level, const char* filename, int linenumber, const char* function, const char* format, ...);
 
   private:
     const Loggable &_loggable;

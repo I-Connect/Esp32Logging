@@ -35,10 +35,34 @@ namespace esp32m
         return new (pool) LogMessage(size, level, stamp, name, message, ml);
     }
 
+    LogMessage* LogMessage::alloc(LogLevel level, int64_t stamp, const char* name, const char* task, const char* filename, const int linenumber, const char* function, const char* message)
+    {
+        size_t ml = strlen(message);
+        while (ml)
+        {
+            auto c = message[ml - 1];
+            if (c == '\n' || c == '\r') {
+                ml--;
+            }
+            else {
+                break;
+            }
+        }
+        size_t size = sizeof(LogMessage) + ml + 1;
+        void* pool = malloc(size);
+        return new (pool) LogMessage(size, level, stamp, name, task, filename, linenumber, function, message, ml);
+    }
+
     LogMessage::LogMessage(size_t size, LogLevel level, int64_t stamp, const char *name, const char *message, size_t messageLen)
         : _size(size), _stamp(stamp), _name(name), _level(level)
     {
         strncpy((char *)this->message(), message, messageLen)[messageLen] = '\0';
+    }
+
+    LogMessage::LogMessage(size_t size, LogLevel level, int64_t stamp, const char* name, const char* task, const char* filename, const int linenumber, const char* function, const char* message, size_t messageLen)
+        : _size(size), _stamp(stamp), _name(name), _task(task), _filename(filename), _linenumber(linenumber), _function(function), _level(level)
+    {
+        strncpy((char*)this->message(), message, messageLen)[messageLen] = '\0';
     }
 
     Logger &Loggable::logger()
@@ -319,6 +343,16 @@ namespace esp32m
 
     void Logger::log(LogLevel level, const char *msg)
     {
+        makeMessageAndAppend(level, "", 0, "", msg);
+    }
+
+    void Logger::makeMessageAndAppend(LogLevel level,
+                                  const char* filename,
+                                  const int linenumber,
+                                  const char* function,
+                                  const char* msg
+                                 )
+    {
         if (isEmpty(msg))
             return;
         auto effectiveLevel = _level;
@@ -327,7 +361,7 @@ namespace esp32m
         if (level > effectiveLevel)
             return;
         auto name = _loggable.logName();
-        LogMessage *message = LogMessage::alloc(level, timeOrUptime(), name, msg);
+        LogMessage* message = LogMessage::alloc(level, timeOrUptime(), name, pcTaskGetName(NULL), filename, linenumber, function, msg);
         if (!message)
             return;
         if (!_appenders)
@@ -384,6 +418,39 @@ namespace esp32m
         log(level, temp);
         if (len >= sizeof(buf))
             free(temp);
+    }
+
+    void Logger::extended_logf(LogLevel level, const char* filename, int linenumber, const char* function, const char* format, ...)
+    {
+        if (!format) {
+            return;
+        }
+        va_list arg;
+        va_start(arg, format);
+        extended_logf(level, filename, linenumber, function, format, arg);
+        va_end(arg);
+    }
+
+    void Logger::extended_logf(LogLevel level, const char* filename, int linenumber, const char* function, const char* format, va_list arg)
+    {
+        if (!format) {
+            return;
+        }
+        char buf[64];
+        char* temp = buf;
+        auto len = vsnprintf(NULL, 0, format, arg);
+        if (len >= sizeof(buf))
+        {
+            temp = (char*)malloc(len + 1);
+            if (temp == NULL) {
+              return;
+            }
+        }
+        vsnprintf(temp, len + 1, format, arg);
+        makeMessageAndAppend(level, filename, linenumber, function, temp);
+        if (len >= sizeof(buf)) {
+            free(temp);
+        }
     }
 
     void Logging::addBufferedAppender(LogAppender *a, int bufsize, bool autoRelease, uint32_t maxLoopItems)
