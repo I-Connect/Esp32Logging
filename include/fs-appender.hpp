@@ -15,7 +15,9 @@ namespace esp32m
     public:
         FSAppender(FS &fs, const char *name, uint8_t maxFiles = 1) : _fs(fs), _name(name), _maxFiles(maxFiles), _lock(xSemaphoreCreateRecursiveMutex()) {}
         FSAppender(const FSAppender &) = delete;
-
+        const char* name() override  {
+            return "FSAppender";
+        }
     protected:
         virtual bool append(const char *message);
         virtual bool shouldRotate(File &f) { return f.size() > 8192; }

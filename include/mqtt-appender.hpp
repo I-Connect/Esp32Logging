@@ -13,7 +13,9 @@ namespace esp32m
     MQTTAppender(const MQTTAppender &) = delete;
     MQTTAppender(const char *topic) : _topic(topic) {}
     void init(esp_mqtt_client_handle_t handle) { _handle = handle; }
-
+    const char* name() override  {
+      return "MQTTAppender";
+    }
   protected:
     virtual bool append(const char *message);
 

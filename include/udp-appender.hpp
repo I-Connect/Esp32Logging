@@ -18,6 +18,9 @@ namespace esp32m
         UDPAppender(const char *ipaddr=nullptr, uint16_t port = 514);
         UDPAppender(const UDPAppender &) = delete;
         ~UDPAppender();
+        const char* name() override  {
+            return "UDPAppender";
+        }
         Format format() { return _format; }
         void setMode(Format format) { _format = format; }
 
