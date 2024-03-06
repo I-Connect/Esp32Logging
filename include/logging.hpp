@@ -228,6 +228,17 @@ namespace esp32m
    */
   class LogAppender
   {
+  public:
+    /**
+     * @brief Set minimum loglevel to use for specific appender-implementation
+    */
+    void setLogLevel(const LogLevel level) {
+      _level = level;
+    }
+    LogLevel getLogLevel() const {
+      return _level;
+    }
+
   protected:
     /**
      * @brief Implementations must override to this method to send log message to the corresponding medium
@@ -245,6 +256,7 @@ namespace esp32m
   private:
     LogAppender *_prev = nullptr;
     LogAppender *_next = nullptr;
+    LogLevel _level = LogLevel::Verbose;
     friend class Logger;
     friend class Logging;
     friend class BufferedAppender;

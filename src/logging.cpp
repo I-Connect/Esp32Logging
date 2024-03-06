@@ -93,6 +93,11 @@ namespace esp32m
     protected:
         bool append(const LogMessage *message)
         {
+            if (!message || message->level() > _level || message->level() > _appender.getLevel() ) 
+            {
+                return true;
+            }
+            
             if (!_handle) // No Ring Buffer = It has been released by autoRelease option
                 return _appender.append(message);
 
@@ -320,6 +325,11 @@ namespace esp32m
 
     bool FormattingAppender::append(const LogMessage *message)
     {
+        if (!message || message->level() > _level || message->level() > appender.getLevel()) 
+        {
+            return true;
+        }
+
         auto str = _formatter(message);
         if (!str)
             return true;
