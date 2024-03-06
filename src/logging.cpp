@@ -571,7 +571,7 @@ Logger& Logging::system()
 
 bool charToLevel(char c, LogLevel& l)
 {
-  switch (c)
+  switch (toupper(c))
   {
     case 'I':
       l = LogLevel::Info;

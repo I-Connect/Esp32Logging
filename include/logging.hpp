@@ -39,6 +39,8 @@ enum LogLevel
   Verbose
 };
 
+bool charToLevel(char c, LogLevel& l);
+
 class Logger;
 
 /**
