@@ -257,6 +257,8 @@ typedef char* (*LogMessageFormatter)(const LogMessage*);
 class LogAppender
 {
   public:
+    virtual ~LogAppender() = default;
+    
     /**
      * @brief Set minimum loglevel to use for specific appender-implementation
     */
