@@ -8,8 +8,8 @@
 #include <esp_timer.h>
 #include <esp_task_wdt.h>
 #include <esp32-hal.h>
-
 #include "logging.hpp"
+#include <cctype>  // For isspace()
 
 namespace esp32m
 {
@@ -360,7 +360,7 @@ bool isEmpty(const char* s)
     return true;
   }
   for (int i = 0; i < l; i++)
-    if (!isspace(s[i])) {
+    if (!std::isspace(s[i])) {
       return false;
     }
   return true;
