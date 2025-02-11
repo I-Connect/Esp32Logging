@@ -17,9 +17,9 @@ bool ETSAppender::append(const char* message)
   {
     auto l = strlen(message);
     for (auto i = 0; i < l; i++) {
-      ets_printf("%c", message[i]);
+      ets_write_char_uart(message[i]);
     }
-    ets_printf("%c", '\n');
+    ets_write_char_uart('\n');
   }
 
   return true;
